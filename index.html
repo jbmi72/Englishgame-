@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>Cyborg Runner - Server Ready</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #020005; font-family: 'Segoe UI', sans-serif; }
+        canvas { display: block; position: absolute; inset: 0; z-index: 1; }
+        #ui { position: absolute; inset: 0; pointer-events: none; z-index: 10; display: flex; flex-direction: column; align-items: center; }
+        .hud { width: 90%; display: flex; justify-content: space-between; padding: 25px; color: #00f2ff; pointer-events: auto; }
+        .stat-box { background: rgba(0,0,0,0.85); border: 2px solid #00f2ff; padding: 10px 20px; border-radius: 10px; font-weight: bold; font-size: 22px; box-shadow: 0 0 15px #00f2ff44; }
+        #q-panel { margin-top: 40px; background: rgba(20, 0, 40, 0.95); border: 3px solid #ff00ff; padding: 30px; border-radius: 25px; text-align: center; pointer-events: auto; min-width: 380px; box-shadow: 0 0 30px #ff00ff44; }
+        #word-display { font-size: 60px; color: #fff; text-shadow: 0 0 20px #ff00ff; display: block; }
+        #btns { position: absolute; bottom: 60px; display: flex; gap: 20px; pointer-events: auto; }
+        .btn { background: #000; border: 2px solid #00f2ff; color: #00f2ff; padding: 20px 50px; font-size: 26px; border-radius: 50px; cursor: pointer; font-weight: bold; text-transform: lowercase; transition: 0.2s; }
+        .btn:hover { background: #00f2ff; color: #000; box-shadow: 0 0 30px #00f2ff; }
+        #start-screen { position: fixed; inset: 0; background: #020005; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #00f2ff; text-align: center; }
+        .play-btn { background: #ff00ff; color: white; border: none; padding: 25px 80px; font-size: 35px; border-radius: 15px; cursor: pointer; margin-top: 20px; box-shadow: 0 0 20px #ff00ff; }
+    </style>
+</head>
+<body>
+
+<div id="start-screen">
+    <h1 style="font-size: 70px; text-shadow: 0 0 25px #00f2ff;">NEON RUNNER</h1>
+    <p id="status" style="font-size: 20px;">טוען גרפיקה...</p>
+    <button id="start-btn" class="play-btn" style="display:none;" onclick="initGame()">START MISSION</button>
+</div>
+
+<div id="ui">
+    <div class="hud">
+        <div class="stat-box" id="sc">score: 0</div>
+        <div class="stat-box" id="sp">speed: 1.0x</div>
+        <div class="stat-box" id="lv">❤️❤️❤️</div>
+    </div>
+    <div id="q-panel"><div id="word-display">טוען...</div></div>
+    <div id="btns">
+        <button class="btn" onclick="check(this.innerText)"></button>
+        <button class="btn" onclick="check(this.innerText)"></button>
+        <button class="btn" onclick="check(this.innerText)"></button>
+    </div>
+</div>
+
+<canvas id="c"></canvas>
+
+<script>
+    const canvas = document.getElementById('c'), ctx = canvas.getContext('2d');
+    let w, h, score = 0, speed = 1, lives = 3, frame = 0, active = false;
+    let particles = [], currentQ = {}, bgX = 0;
+
+    // הגדרת קבצי התמונה המקומיים
+    const spriteImg = new Image();
+    const bgImg = new Image();
+    
+    // נתיבים לקבצים בשרת (צריכים להיות באותה תיקייה)
+    spriteImg.src = 'cyborg.png';
+    bgImg.src = 'city.png';
+
+    let loaded = 0;
+    const checkLoaded = () => {
+        loaded++;
+        if(loaded >= 2) {
+            document.getElementById('status').innerText = "המערכת מוכנה!";
+            document.getElementById('start-btn').style.display = "block";
+        }
+    };
+    spriteImg.onload = checkLoaded;
+    bgImg.onload = checkLoaded;
+
+    // אוצר מילים בדוק
+    const wordBank = [
+        {h: "הזדמנות", e: "opportunity", alt: ["operation", "opposite"]},
+        {h: "סביבה", e: "environment", alt: ["energy", "equipment"]},
+        {h: "אחריות", e: "responsibility", alt: ["respect", "response"]},
+        {h: "להעריך", e: "appreciate", alt: ["approach", "apply"]},
+        {h: "משמעותי", e: "significant", alt: ["scientific", "sufficient"]}
+    ];
+
+    function initGame() {
+        document.getElementById('start-screen').style.display = 'none';
+        active = true; resize();
+        next(); loop();
+    }
+
+    function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+    window.onresize = resize;
+
+    function next() {
+        currentQ = wordBank[Math.floor(Math.random() * wordBank.length)];
+        document.getElementById('word-display').innerText = currentQ.h;
+        let opts = [currentQ.e, ...currentQ.alt].sort(() => Math.random() - 0.5);
+        document.querySelectorAll('.btn').forEach((b, i) => b.innerText = opts[i]);
+    }
+
+    function check(val) {
+        if(val === currentQ.e) {
+            score += 10; speed += 0.2;
+            for(let j=0; j<20; j++) particles.push({x: 300, y: h-200, vx: Math.random()*10-5, vy: Math.random()*-10, l: 1});
+        } else {
+            lives--; speed = Math.max(1, speed - 0.3);
+        }
+        document.getElementById('sc').innerText = "score: " + score;
+        document.getElementById('sp').innerText = "speed: " + speed.toFixed(1) + "x";
+        document.getElementById('lv').innerText = "❤️".repeat(lives);
+        if(lives <= 0) location.reload(); else next();
+    }
+
+    function loop() {
+        if(!active) return;
+        ctx.fillStyle = "#020005"; ctx.fillRect(0,0,w,h);
+
+        // רקע פרלקסה אינסופי
+        bgX -= (2 * speed);
+        if (bgX <= -w) bgX = 0;
+        ctx.drawImage(bgImg, bgX, 0, w, h);
+        ctx.drawImage(bgImg, bgX + w, 0, w, h);
+
+        // אנימציית דמות מה-Spritesheet
+        const fIndex = Math.floor(frame * 0.15 * speed) % 8;
+        const sw = spriteImg.width / 8;
+        const sh = spriteImg.height / 2;
+        ctx.drawImage(spriteImg, fIndex * sw, 0, sw, sh, 150, h - 380, 250, 250);
+
+        // חלקיקים
+        particles.forEach((p, i) => {
+            p.x += p.vx - speed*5; p.y += p.vy; p.l -= 0.02;
+            ctx.fillStyle = `rgba(0, 242, 255, ${p.l})`; ctx.fillRect(p.x, p.y, 4, 4);
+            if(p.l <= 0) particles.splice(i, 1);
+        });
+
+        frame++;
+        requestAnimationFrame(loop);
+    }
+</script>
+</body>
+</html>
