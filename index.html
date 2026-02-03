@@ -2,46 +2,76 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Cyborg Runner - Ultimate Fix</title>
+    <title>Cyborg Runner - Vector Edition</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; }
-        canvas { display: block; }
-        #ui { position: absolute; inset: 0; pointer-events: none; z-index: 10; display: flex; flex-direction: column; align-items: center; color: #00f2ff; }
-        .hud { width: 95%; display: flex; justify-content: space-between; padding: 20px; font-size: 20px; font-weight: bold; }
-        #q-box { margin-top: 30px; background: rgba(10, 0, 30, 0.95); border: 3px solid #ff00ff; padding: 25px; border-radius: 20px; text-align: center; pointer-events: auto; min-width: 350px; }
-        #word { font-size: 55px; color: white; text-shadow: 0 0 20px #ff00ff; }
-        #btns { position: absolute; bottom: 50px; display: flex; gap: 20px; pointer-events: auto; }
-        .btn { background: #000; border: 2px solid #00f2ff; color: #00f2ff; padding: 15px 40px; font-size: 24px; border-radius: 50px; cursor: pointer; font-weight: bold; }
-        .btn:hover { background: #00f2ff; color: #000; }
+        body { margin: 0; overflow: hidden; background: #05010a; font-family: 'Segoe UI', sans-serif; }
+        #game-container { position: relative; width: 100vw; height: 100vh; background: linear-gradient(to bottom, #05010a, #1a0b2e); }
+        
+        /* דמות סייבורג וקטורית עם אנימציה */
+        #cyborg {
+            position: absolute; bottom: 140px; left: 150px;
+            width: 100px; height: 150px; z-index: 5;
+            filter: drop-shadow(0 0 10px #00f2ff);
+        }
+
+        /* עיר וקטורית שזזה ברקע */
+        .city-layer {
+            position: absolute; bottom: 130px; left: 0; width: 200%; height: 400px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect x='20' y='100' width='60' height='300' fill='%230a001a' stroke='%23ff00ff' stroke-width='1' opacity='0.5'/%3E%3Crect x='100' y='50' width='80' height='350' fill='%23050010' stroke='%2300f2ff' stroke-width='1' opacity='0.5'/%3E%3Crect x='220' y='150' width='70' height='250' fill='%230a001a' stroke='%23ff00ff' stroke-width='1' opacity='0.5'/%3E%3Crect x='320' y='80' width='60' height='320' fill='%23050010' stroke='%2300f2ff' stroke-width='1' opacity='0.5'/%3E%3C/svg%3E");
+            background-repeat: repeat-x;
+            animation: moveCity 10s linear infinite;
+        }
+
+        @keyframes moveCity { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+        /* ממשק משתמש */
+        #ui { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; z-index: 100; pointer-events: none; }
+        .stats { width: 90%; display: flex; justify-content: space-between; padding: 20px; color: #00f2ff; font-weight: bold; font-size: 22px; }
+        #q-box { margin-top: 50px; background: rgba(0,0,0,0.8); border: 2px solid #ff00ff; padding: 30px; border-radius: 20px; text-align: center; pointer-events: auto; min-width: 350px; box-shadow: 0 0 30px #ff00ff44; }
+        #word { font-size: 55px; color: white; text-shadow: 0 0 15px #ff00ff; margin-bottom: 20px; }
+        #btns { position: absolute; bottom: 60px; display: flex; gap: 20px; pointer-events: auto; }
+        .btn { background: #000; border: 2px solid #00f2ff; color: #00f2ff; padding: 15px 40px; font-size: 24px; border-radius: 50px; cursor: pointer; transition: 0.2s; font-weight: bold; }
+        .btn:hover { background: #00f2ff; color: #000; box-shadow: 0 0 20px #00f2ff; }
+        
+        /* אנימציית ריצה פשוטה לדמות */
+        .running { animation: runBounce 0.4s infinite alternate; }
+        @keyframes runBounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+
+        #floor { position: absolute; bottom: 0; width: 100%; height: 140px; background: #05010a; border-top: 4px solid #00f2ff; box-shadow: 0 -10px 20px rgba(0,242,255,0.3); }
     </style>
 </head>
 <body>
 
-<div id="ui">
-    <div class="hud">
-        <div id="sc">SCORE: 0</div>
-        <div id="sp">SPEED: 1.0x</div>
-        <div id="lv">❤️❤️❤️</div>
-    </div>
-    <div id="q-box"><div id="word">...</div></div>
-    <div id="btns">
-        <button class="btn" onclick="check(this.innerText)"></button>
-        <button class="btn" onclick="check(this.innerText)"></button>
-        <button class="btn" onclick="check(this.innerText)"></button>
+<div id="game-container">
+    <div class="city-layer" id="city"></div>
+    <div id="floor"></div>
+    
+    <svg id="cyborg" class="running" viewBox="0 0 100 150">
+        <rect x="35" y="30" width="30" height="50" fill="#111" stroke="#00f2ff" stroke-width="2" />
+        <rect x="35" y="10" width="30" height="25" fill="#000" stroke="#00f2ff" stroke-width="2" />
+        <rect x="40" y="18" width="20" height="4" fill="#00f2ff" />
+        <line x1="40" y1="80" x2="30" y2="130" stroke="#00f2ff" stroke-width="8" />
+        <line x1="60" y1="80" x2="70" y2="130" stroke="#00f2ff" stroke-width="8" />
+    </svg>
+
+    <div id="ui">
+        <div class="stats">
+            <div id="sc">SCORE: 0</div>
+            <div id="lv">❤️❤️❤️</div>
+        </div>
+        <div id="q-box">
+            <div id="word">הזדמנות</div>
+        </div>
+        <div id="btns">
+            <button class="btn" onclick="check(0)"></button>
+            <button class="btn" onclick="check(1)"></button>
+            <button class="btn" onclick="check(2)"></button>
+        </div>
     </div>
 </div>
 
-<canvas id="c"></canvas>
-
 <script>
-    const canvas = document.getElementById('c'), ctx = canvas.getContext('2d');
-    let w, h, score = 0, speed = 1, lives = 3, frame = 0, active = false;
-    let bgX = 0;
-
-    const sprite = new Image(); sprite.src = 'cyborg.png';
-    const city = new Image(); city.src = 'city.png';
-
-    // מילון מילים פשוט ומדויק
+    let score = 0, lives = 3, currentSpeed = 10;
     const words = [
         {h: "הזדמנות", e: "opportunity", alt: ["operation", "opposite"]},
         {h: "סביבה", e: "environment", alt: ["energy", "equipment"]},
@@ -49,16 +79,7 @@
         {h: "להעריך", e: "appreciate", alt: ["approach", "apply"]},
         {h: "משמעותי", e: "significant", alt: ["scientific", "sufficient"]}
     ];
-
     let currentQ = {};
-
-    Promise.all([
-        new Promise(r => sprite.onload = r),
-        new Promise(r => city.onload = r)
-    ]).then(() => { active = true; resize(); next(); loop(); });
-
-    function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
-    window.onresize = resize;
 
     function next() {
         currentQ = words[Math.floor(Math.random() * words.length)];
@@ -67,51 +88,21 @@
         document.querySelectorAll('.btn').forEach((b, i) => b.innerText = opts[i]);
     }
 
-    function check(val) {
-        if(val === currentQ.e) { score += 10; speed += 0.15; } 
-        else { lives--; speed = Math.max(1, speed - 0.2); }
+    function check(idx) {
+        const selected = document.querySelectorAll('.btn')[idx].innerText;
+        if(selected === currentQ.e) {
+            score += 10;
+            currentSpeed = Math.max(2, currentSpeed - 1);
+            document.getElementById('city').style.animationDuration = currentSpeed + "s";
+        } else {
+            lives--;
+        }
         document.getElementById('sc').innerText = "SCORE: " + score;
-        document.getElementById('sp').innerText = "SPEED: " + speed.toFixed(1) + "x";
         document.getElementById('lv').innerText = "❤️".repeat(lives);
         if(lives <= 0) location.reload(); else next();
     }
 
-    function loop() {
-        if(!active) return;
-        ctx.clearRect(0, 0, w, h);
-
-        // --- רקע (העיר) ---
-        // הפתרון לפסים: מציירים את התמונה כך שתכסה את הגובה, והרוחב מחושב לפי הפרופורציה של התמונה המקורית
-        let bgAspect = city.width / city.height;
-        let drawWidth = h * bgAspect;
-        bgX -= (4 * speed);
-        if (bgX <= -drawWidth) bgX = 0;
-        
-        ctx.drawImage(city, bgX, 0, drawWidth, h);
-        ctx.drawImage(city, bgX + drawWidth, 0, drawWidth, h);
-
-        // --- דמות (הסייבורג) ---
-        // הגדרנו 8 עמודות. כדי למנוע "פסים", אנחנו מצמצמים מעט את אזור החיתוך (Padding)
-        const cols = 8;
-        const rows = 2;
-        const fw = sprite.width / cols;
-        const fh = sprite.height / rows;
-        const currentFrame = Math.floor(frame * 0.15 * speed) % cols;
-
-        ctx.save();
-        ctx.shadowBlur = 20; ctx.shadowColor = "#00f2ff";
-        
-        // כאן התיקון: חותכים פנימה ב-2 פיקסלים מכל צד כדי להעלים שאריות של דמויות אחרות
-        ctx.drawImage(
-            sprite, 
-            currentFrame * fw + 2, 2, fw - 4, fh - 4, 
-            150, h - 350, 200, 200
-        );
-        ctx.restore();
-
-        frame++;
-        requestAnimationFrame(loop);
-    }
+    next();
 </script>
 </body>
 </html>
