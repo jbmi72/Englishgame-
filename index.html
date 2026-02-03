@@ -2,77 +2,44 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Cyborg Runner - Vector Edition</title>
+    <title>Neon Cyborg Runner - Stable Edition</title>
     <style>
         body { margin: 0; overflow: hidden; background: #05010a; font-family: 'Segoe UI', sans-serif; }
-        #game-container { position: relative; width: 100vw; height: 100vh; background: linear-gradient(to bottom, #05010a, #1a0b2e); }
-        
-        /* דמות סייבורג וקטורית עם אנימציה */
-        #cyborg {
-            position: absolute; bottom: 140px; left: 150px;
-            width: 100px; height: 150px; z-index: 5;
-            filter: drop-shadow(0 0 10px #00f2ff);
-        }
-
-        /* עיר וקטורית שזזה ברקע */
-        .city-layer {
-            position: absolute; bottom: 130px; left: 0; width: 200%; height: 400px;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect x='20' y='100' width='60' height='300' fill='%230a001a' stroke='%23ff00ff' stroke-width='1' opacity='0.5'/%3E%3Crect x='100' y='50' width='80' height='350' fill='%23050010' stroke='%2300f2ff' stroke-width='1' opacity='0.5'/%3E%3Crect x='220' y='150' width='70' height='250' fill='%230a001a' stroke='%23ff00ff' stroke-width='1' opacity='0.5'/%3E%3Crect x='320' y='80' width='60' height='320' fill='%23050010' stroke='%2300f2ff' stroke-width='1' opacity='0.5'/%3E%3C/svg%3E");
-            background-repeat: repeat-x;
-            animation: moveCity 10s linear infinite;
-        }
-
-        @keyframes moveCity { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-
-        /* ממשק משתמש */
-        #ui { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; z-index: 100; pointer-events: none; }
-        .stats { width: 90%; display: flex; justify-content: space-between; padding: 20px; color: #00f2ff; font-weight: bold; font-size: 22px; }
-        #q-box { margin-top: 50px; background: rgba(0,0,0,0.8); border: 2px solid #ff00ff; padding: 30px; border-radius: 20px; text-align: center; pointer-events: auto; min-width: 350px; box-shadow: 0 0 30px #ff00ff44; }
-        #word { font-size: 55px; color: white; text-shadow: 0 0 15px #ff00ff; margin-bottom: 20px; }
+        canvas { display: block; }
+        #ui { position: absolute; inset: 0; pointer-events: none; z-index: 100; display: flex; flex-direction: column; align-items: center; color: #00f2ff; }
+        .hud { width: 90%; display: flex; justify-content: space-between; padding: 20px; font-size: 22px; font-weight: bold; }
+        #q-panel { margin-top: 40px; background: rgba(20, 0, 40, 0.9); border: 3px solid #ff00ff; padding: 30px; border-radius: 20px; text-align: center; pointer-events: auto; min-width: 350px; box-shadow: 0 0 30px #ff00ff44; }
+        #word { font-size: 60px; color: white; text-shadow: 0 0 20px #ff00ff; margin-bottom: 20px; }
         #btns { position: absolute; bottom: 60px; display: flex; gap: 20px; pointer-events: auto; }
-        .btn { background: #000; border: 2px solid #00f2ff; color: #00f2ff; padding: 15px 40px; font-size: 24px; border-radius: 50px; cursor: pointer; transition: 0.2s; font-weight: bold; }
-        .btn:hover { background: #00f2ff; color: #000; box-shadow: 0 0 20px #00f2ff; }
-        
-        /* אנימציית ריצה פשוטה לדמות */
-        .running { animation: runBounce 0.4s infinite alternate; }
-        @keyframes runBounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
-
-        #floor { position: absolute; bottom: 0; width: 100%; height: 140px; background: #05010a; border-top: 4px solid #00f2ff; box-shadow: 0 -10px 20px rgba(0,242,255,0.3); }
+        .btn { background: #000; border: 2px solid #00f2ff; color: #00f2ff; padding: 15px 45px; font-size: 26px; border-radius: 50px; cursor: pointer; transition: 0.2s; font-weight: bold; }
+        .btn:hover { background: #00f2ff; color: #000; box-shadow: 0 0 30px #00f2ff; transform: scale(1.1); }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <div class="city-layer" id="city"></div>
-    <div id="floor"></div>
-    
-    <svg id="cyborg" class="running" viewBox="0 0 100 150">
-        <rect x="35" y="30" width="30" height="50" fill="#111" stroke="#00f2ff" stroke-width="2" />
-        <rect x="35" y="10" width="30" height="25" fill="#000" stroke="#00f2ff" stroke-width="2" />
-        <rect x="40" y="18" width="20" height="4" fill="#00f2ff" />
-        <line x1="40" y1="80" x2="30" y2="130" stroke="#00f2ff" stroke-width="8" />
-        <line x1="60" y1="80" x2="70" y2="130" stroke="#00f2ff" stroke-width="8" />
-    </svg>
-
-    <div id="ui">
-        <div class="stats">
-            <div id="sc">SCORE: 0</div>
-            <div id="lv">❤️❤️❤️</div>
-        </div>
-        <div id="q-box">
-            <div id="word">הזדמנות</div>
-        </div>
-        <div id="btns">
-            <button class="btn" onclick="check(0)"></button>
-            <button class="btn" onclick="check(1)"></button>
-            <button class="btn" onclick="check(2)"></button>
-        </div>
+<div id="ui">
+    <div class="hud">
+        <div id="sc">SCORE: 0</div>
+        <div id="lv">❤️❤️❤️</div>
+    </div>
+    <div id="q-panel">
+        <div id="word">טוען...</div>
+    </div>
+    <div id="btns">
+        <button class="btn" onclick="check(this.innerText)"></button>
+        <button class="btn" onclick="check(this.innerText)"></button>
+        <button class="btn" onclick="check(this.innerText)"></button>
     </div>
 </div>
 
+<canvas id="c"></canvas>
+
 <script>
-    let score = 0, lives = 3, currentSpeed = 10;
-    const words = [
+    const canvas = document.getElementById('c'), ctx = canvas.getContext('2d');
+    let w, h, score = 0, lives = 3, frame = 0, speed = 1;
+    let particles = [], buildings = [];
+
+    const wordBank = [
         {h: "הזדמנות", e: "opportunity", alt: ["operation", "opposite"]},
         {h: "סביבה", e: "environment", alt: ["energy", "equipment"]},
         {h: "אחריות", e: "responsibility", alt: ["respect", "response"]},
@@ -81,19 +48,25 @@
     ];
     let currentQ = {};
 
+    function resize() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+        buildings = [];
+        for(let i=0; i<10; i++) buildings.push({x: i*300, w: 150+Math.random()*100, h: 200+Math.random()*300});
+    }
+    window.onresize = resize;
+
     function next() {
-        currentQ = words[Math.floor(Math.random() * words.length)];
+        currentQ = wordBank[Math.floor(Math.random() * wordBank.length)];
         document.getElementById('word').innerText = currentQ.h;
         let opts = [currentQ.e, ...currentQ.alt].sort(() => Math.random() - 0.5);
         document.querySelectorAll('.btn').forEach((b, i) => b.innerText = opts[i]);
     }
 
-    function check(idx) {
-        const selected = document.querySelectorAll('.btn')[idx].innerText;
-        if(selected === currentQ.e) {
-            score += 10;
-            currentSpeed = Math.max(2, currentSpeed - 1);
-            document.getElementById('city').style.animationDuration = currentSpeed + "s";
+    function check(val) {
+        if(val === currentQ.e) {
+            score += 10; speed += 0.1;
+            for(let i=0; i<20; i++) particles.push({x: 200, y: h-150, vx: Math.random()*10-5, vy: -Math.random()*10, l: 1});
         } else {
             lives--;
         }
@@ -102,7 +75,52 @@
         if(lives <= 0) location.reload(); else next();
     }
 
-    next();
+    function drawCyborg(f) {
+        ctx.save();
+        ctx.translate(150, h - 220 + Math.sin(f*0.2)*10);
+        ctx.shadowBlur = 20; ctx.shadowColor = "#00f2ff";
+        
+        // גוף הסייבורג (קוד גרפי במקום תמונה)
+        ctx.strokeStyle = "#00f2ff"; ctx.lineWidth = 4;
+        ctx.strokeRect(0, 0, 50, 80);
+        ctx.strokeRect(5, -30, 40, 30); // ראש
+        ctx.fillStyle = "#00f2ff"; ctx.fillRect(15, -20, 20, 5); // עיניים
+        
+        // רגליים זזות
+        let legAngle = Math.sin(f*0.3) * 20;
+        ctx.beginPath(); ctx.moveTo(15, 80); ctx.lineTo(15 - legAngle, 120); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(35, 80); ctx.lineTo(35 + legAngle, 120); ctx.stroke();
+        ctx.restore();
+    }
+
+    function loop() {
+        ctx.fillStyle = "#05010a"; ctx.fillRect(0,0,w,h);
+
+        // ציור בנייני ניאון
+        buildings.forEach(b => {
+            b.x -= 3 * speed;
+            ctx.strokeStyle = "#ff00ff22"; ctx.strokeRect(b.x, h-b.h-140, b.w, b.h);
+            ctx.fillStyle = "rgba(10, 0, 30, 0.5)"; ctx.fillRect(b.x, h-b.h-140, b.w, b.h);
+            if(b.x + b.w < 0) b.x = w;
+        });
+
+        // רצפה
+        ctx.strokeStyle = "#00f2ff"; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(0, h-140); ctx.lineTo(w, h-140); ctx.stroke();
+
+        // חלקיקים
+        particles.forEach((p, i) => {
+            p.x += p.vx - 3; p.y += p.vy; p.l -= 0.02;
+            ctx.fillStyle = `rgba(0, 242, 255, ${p.l})`; ctx.fillRect(p.x, p.y, 4, 4);
+            if(p.l <= 0) particles.splice(i, 1);
+        });
+
+        drawCyborg(frame);
+        frame++;
+        requestAnimationFrame(loop);
+    }
+
+    resize(); next(); loop();
 </script>
 </body>
 </html>
