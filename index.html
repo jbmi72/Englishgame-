@@ -2,23 +2,27 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Cyborg Runner - Fixed Animation</title>
+    <title>Cyborg Runner - Precision Edition</title>
     <style>
         body { margin: 0; overflow: hidden; background: #020005; font-family: sans-serif; }
-        canvas { display: block; }
+        canvas { 
+            display: block; 
+            image-rendering: pixelated; /* מונע טשטוש של הדמות */
+            image-rendering: crisp-edges;
+        }
         #ui { position: absolute; inset: 0; pointer-events: none; z-index: 10; display: flex; flex-direction: column; align-items: center; color: #00f2ff; }
         .hud { width: 90%; display: flex; justify-content: space-between; padding: 20px; font-size: 20px; font-weight: bold; }
-        #q-box { margin-top: 50px; background: rgba(20,0,40,0.9); border: 2px solid #ff00ff; padding: 20px; border-radius: 20px; text-align: center; pointer-events: auto; min-width: 300px; box-shadow: 0 0 20px #ff00ff44; }
-        #word { font-size: 45px; color: white; text-shadow: 0 0 10px #ff00ff; }
-        #btns { position: absolute; bottom: 50px; display: flex; gap: 15px; pointer-events: auto; }
-        .btn { background: #000; border: 2px solid #00f2ff; color: #00f2ff; padding: 15px 30px; font-size: 22px; border-radius: 50px; cursor: pointer; font-weight: bold; text-transform: lowercase; }
-        .btn:hover { background: #00f2ff; color: #000; }
+        #q-box { margin-top: 40px; background: rgba(10, 0, 30, 0.95); border: 3px solid #ff00ff; padding: 25px; border-radius: 20px; text-align: center; pointer-events: auto; min-width: 350px; box-shadow: 0 0 30px #ff00ff55; }
+        #word { font-size: 55px; color: white; text-shadow: 0 0 20px #ff00ff; }
+        #btns { position: absolute; bottom: 50px; display: flex; gap: 20px; pointer-events: auto; }
+        .btn { background: #000; border: 2px solid #00f2ff; color: #00f2ff; padding: 15px 40px; font-size: 24px; border-radius: 50px; cursor: pointer; font-weight: bold; text-transform: lowercase; }
+        .btn:hover { background: #00f2ff; color: #000; box-shadow: 0 0 20px #00f2ff; }
         #loading { position: fixed; inset: 0; background: #020005; z-index: 100; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #00f2ff; }
     </style>
 </head>
 <body>
 
-<div id="loading">טוען גרפיקה...</div>
+<div id="loading">מבצע כיול מערכות גרפיות...</div>
 
 <div id="ui">
     <div class="hud"><div id="sc">score: 0</div><div id="sp">speed: 1.0x</div><div id="lv">❤️❤️❤️</div></div>
@@ -40,16 +44,16 @@
     const spriteImg = new Image(); spriteImg.src = 'cyborg.png';
     const bgImg = new Image(); bgImg.src = 'city.png';
 
-    let assetsLoaded = 0;
-    const checkAssets = () => {
-        assetsLoaded++;
-        if(assetsLoaded >= 2) {
+    let loadedCount = 0;
+    const onLoaded = () => {
+        loadedCount++;
+        if(loadedCount >= 2) {
             document.getElementById('loading').style.display = 'none';
             active = true; resize(); next(); loop();
         }
     };
-    spriteImg.onload = checkAssets;
-    bgImg.onload = checkAssets;
+    spriteImg.onload = onLoaded;
+    bgImg.onload = onLoaded;
 
     const wordBank = [
         {h: "הזדמנות", e: "opportunity", alt: ["operation", "opposite"]},
@@ -82,28 +86,30 @@
         if(!active) return;
         ctx.clearRect(0, 0, w, h);
 
-        // 1. ציור הרקע (פרלקסה)
+        // רקע
         bgX -= (2 * speed);
         if (bgX <= -w) bgX = 0;
         ctx.drawImage(bgImg, bgX, 0, w, h);
         ctx.drawImage(bgImg, bgX + w, 0, w, h);
 
-        // 2. חישוב חיתוך הדמות (Sprite Animation)
-        // התמונה שלך מחולקת ל-8 פריימים בשורה הראשונה
-        const cols = 8; 
-        const frameWidth = spriteImg.width / cols;
-        const frameHeight = spriteImg.height / 2; // בהנחה שיש 2 שורות בתמונה ששלחת
+        // אנימציית סייבורג - חיתוך דינמי
+        // לפי התמונה שייצרנו: 8 עמודות, שורה אחת עיקרית של ריצה
+        const columns = 8;
+        const rows = 2; // התמונה שייצרתי מכילה 2 שורות
+        const fw = spriteImg.width / columns;
+        const fh = spriteImg.height / rows;
         
-        const currentFrame = Math.floor(frame * 0.15 * speed) % cols;
+        // בוחרים את הפריים לפי הזמן
+        const currentFrame = Math.floor(frame * 0.15 * speed) % columns;
 
         ctx.save();
-        ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff";
+        // הוספת "הילה" כחולה סביב הדמות
+        ctx.shadowBlur = 10; ctx.shadowColor = "#00f2ff";
         
-        // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
         ctx.drawImage(
             spriteImg, 
-            currentFrame * frameWidth, 0, frameWidth, frameHeight, // המקור (איפה לחתוך)
-            150, h - 350, 200, 200 // היעד (איפה לצייר על המסך)
+            currentFrame * fw, 0, fw, fh, // חיתוך הפריים הנוכחי מהשורה הראשונה
+            150, h - 350, 220, 220 // ציור על המסך בגודל פרופורציונלי
         );
         ctx.restore();
 
